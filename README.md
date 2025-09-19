@@ -28,3 +28,17 @@ CI builds are configured in `.github/workflows/build.yml` and run per‑OS with 
   - `git tag -a v1.0.0 -m "Color Analyzer v1.0.0"`
   - `git push origin v1.0.0`
 Artifacts from `dist/` are attached to the GitHub Release.
+
+## Project Goals
+- Offline preservation: package the 2024 color analysis page so it runs locally with no network calls (all JS/CSS/assets are bundled).
+- Usability: add an in‑app floating eyedropper color picker with live formats (HEX/RGB/HSL/CMYK) and quick copy.
+
+## Licensing (Split)
+- Upstream content (original page, algorithms, text): “Color relations and proportions of an image – linear RGB version” by L. Jégou, Université Toulouse‑2 Jean Jaurès (2024). License: Creative Commons Attribution 3.0 Unported (CC BY 3.0) — http://creativecommons.org/licenses/by/3.0/
+- New code in this repo (Electron wrapper, preload bridge, UI glue, color‑picker integration, CI): MIT License.
+- Third‑party libraries (Three.js, dat.gui, JSColor, Canvg, RGBColor) retain their own licenses.
+
+Attribution to include (README/About/releases):
+“Color Analyzer (original work): L. Jégou, Université Toulouse‑2 Jean Jaurès, 2024. Licensed CC BY 3.0. Modifications: Electron packaging and UI integration by <Your Name/Org>.”
+
+See LICENSE for the exact texts.
