@@ -2,9 +2,12 @@
 
 Cross‑platform desktop packaging of the scientific color analysis tool (Three.js visualization, image analysis, SVG/PNG export). The app is bundled under `color-analyzer-electron/` and runs fully offline.
 
+Personal fork of a beloved tool to ensure I never lose access to it. Also adding a quick inline color picker. 
+
+
 ## Quick Start
 - Requirements: Node.js 18.20.8
-- Dev run:
+- Dev run: 
   - `cd color-analyzer-electron`
   - `npm ci`
   - `npm start`
@@ -23,6 +26,13 @@ CI builds are configured in `.github/workflows/build.yml` and run per‑OS with 
 - Image zoom: click the image to toggle full/thumbnail.
 - Export: PNG/SVG under section 5.
 
+## Demo
+<video controls width="720" muted playsinline>
+  <source src="color-analyzer-electron/assets/color-picker-example.mp4?raw=1" type="video/mp4" />
+  Your browser does not support inline video. 
+  See the demo: color-analyzer-electron/assets/color-picker-example.mp4
+</video>
+
 ## Release
 - Tag to trigger the Release workflow (it expects `v*`):
   - `git tag -a v1.0.0 -m "Color Analyzer v1.0.0"`
@@ -39,6 +49,6 @@ Artifacts from `dist/` are attached to the GitHub Release.
 - Third‑party libraries (Three.js, dat.gui, JSColor, Canvg, RGBColor) retain their own licenses.
 
 Attribution to include (README/About/releases):
-“Color Analyzer (original work): L. Jégou, Université Toulouse‑2 Jean Jaurès, 2024. Licensed CC BY 3.0. Modifications: Electron packaging and UI integration by <Your Name/Org>.”
+“Color Analyzer (original work): L. Jégou, Université Toulouse‑2 Jean Jaurès, 2024. Licensed CC BY 3.0. Modifications: Electron packaging and UI integration by golem.”
 
 See LICENSE for the exact texts.
