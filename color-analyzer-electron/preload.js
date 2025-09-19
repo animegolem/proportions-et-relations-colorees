@@ -4,7 +4,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loadImage: (callback) => ipcRenderer.on('load-image', callback),
   openFile: () => ipcRenderer.invoke('dialog:openFile'),
   saveFile: (defaultPath, filters) => ipcRenderer.invoke('dialog:saveFile', defaultPath, filters),
-
+  writeClipboardText: (text) => ipcRenderer.invoke('clipboard:writeText', text),
+  platform: process.platform,
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
 });
 

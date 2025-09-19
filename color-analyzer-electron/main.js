@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, shell, ipcMain, clipboard } = require('electron');
 const path = require('path');
 
 let mainWindow;
@@ -151,5 +151,15 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+// IPC handlers
+ipcMain.handle('clipboard:writeText', (_event, text) => {
+  try {
+    clipboard.writeText(String(text ?? ''));
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: String(e) };
   }
 });
