@@ -10,6 +10,9 @@ class FloatingColorPicker {
         this.eyedropperMode = false;
         this.colorHistory = this.loadColorHistory();
         this.currentColor = '#ff6600';
+        this._markerRaf = null;
+        this._jscolorListenersBound = false;
+        this._markerEventsBound = false;
 
         this.init();
     }
@@ -30,7 +33,14 @@ class FloatingColorPicker {
         fab.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.toggleEyedropper();
+            // Toggle behavior: if panel open, close it; otherwise toggle eyedropper
+            const container = document.getElementById('floatingColorPicker');
+            const isOpen = container && container.style.display === 'flex';
+            if (isOpen) {
+                this.closePicker();
+            } else {
+                this.toggleEyedropper();
+            }
         });
         closeBtn.addEventListener('click', () => this.closePicker());
 
@@ -119,6 +129,9 @@ class FloatingColorPicker {
         setTimeout(() => {
             if (colorInput.color) {
                 this.picker = colorInput.color;
+                // Simplify UI: hide vertical slider and add a bit more face padding
+                this.picker.slider = false;
+                this.picker.pickerFace = 12;
                 this.picker.fromString(this.currentColor.substring(1));
                 // Live updates while dragging (fix swatch lag)
                 this.picker.onImmediateChange = () => {
@@ -127,22 +140,34 @@ class FloatingColorPicker {
                         this.currentColor = hex;
                         this.updateFormatDisplays(hex);
                         this.updateColorPreview(hex);
+                        this.updateMarkers();
                     }
                 };
+                // Initial marker placement
+                this.ensureMarkers();
+                this.updateMarkers();
             }
         }, 50);
 
         // Ensure gradient visuals each time the input opens the picker
-        const ensure = () => setTimeout(() => this.ensureJscolorVisuals(), 50);
-        colorInput.addEventListener('focus', ensure, { once: false });
-        colorInput.addEventListener('click', ensure, { once: false });
+        if (!this._jscolorListenersBound) {
+            const ensure = () => setTimeout(() => { this.ensureJscolorVisuals(); this.updateMarkers(); }, 50);
+            colorInput.addEventListener('focus', ensure, { once: false });
+            colorInput.addEventListener('click', ensure, { once: false });
+            this._jscolorListenersBound = true;
+        }
     }
 
     ensureJscolorVisuals() {
         try {
             if (window.jscolor && jscolor.picker) {
                 const pad = jscolor.picker.pad;     // gradient area
-                const sld = jscolor.picker.sld;     // slider area
+                // slider intentionally disabled for simplified UI
+                try {
+                    if (jscolor.picker.sldB) jscolor.picker.sldB.style.display = 'none';
+                    if (jscolor.picker.sldM) jscolor.picker.sldM.style.display = 'none';
+                    if (jscolor.picker.sld) jscolor.picker.sld.style.display = 'none';
+                } catch(_) {}
                 if (pad && !pad.style.backgroundImage.includes('linear-gradient')) {
                     // Fallback background composed of hue stripes + vertical fade
                     // Approximates hs/hv pads without external images
@@ -152,21 +177,85 @@ class FloatingColorPicker {
                     pad.style.backgroundRepeat = 'no-repeat';
                     pad.style.backgroundSize = '100% 100%';
                 }
-                if (sld && sld.childNodes && sld.childNodes.length === 0) {
-                    // Create simple slider segments if not present
-                    const segCount = 20;
-                    for (let i = 0; i < segCount; i++) {
-                        const seg = document.createElement('div');
-                        seg.style.height = Math.round(jscolor.images.sld[1] / segCount) + 'px';
-                        seg.style.fontSize = '1px';
-                        seg.style.lineHeight = '0';
-                        sld.appendChild(seg);
-                    }
-                }
+                // Ensure and update marker overlays (dot on pad)
+                this.ensureMarkers();
+                this.updateMarkers();
             }
         } catch (_) {
             // Non-fatal visual fallback
         }
+    }
+
+    ensureMarkers() {
+        if (!window.jscolor || !jscolor.picker || !this.picker) return;
+        const padM = jscolor.picker.padM;
+        if (!padM) return;
+
+        // Pad marker (dot)
+        if (!padM.querySelector('.fp-pad-marker')) {
+            const dot = document.createElement('div');
+            dot.className = 'fp-pad-marker';
+            Object.assign(dot.style, {
+                position: 'absolute',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                border: '2px solid #fff',
+                boxShadow: '0 0 0 1px rgba(0,0,0,0.5)',
+                pointerEvents: 'none',
+                transform: 'translate(-50%, -50%)',
+                left: '0px',
+                top: '0px',
+                zIndex: '2'
+            });
+            padM.appendChild(dot);
+        }
+        // No slider marker in simplified UI
+    }
+
+    updateMarkers() {
+        if (this._markerRaf) {
+            cancelAnimationFrame(this._markerRaf);
+            this._markerRaf = null;
+        }
+        this._markerRaf = requestAnimationFrame(() => {
+            try {
+                if (!this.picker || !window.jscolor || !jscolor.picker) return;
+                const padM = jscolor.picker.padM;
+                const dot = padM ? padM.querySelector('.fp-pad-marker') : null;
+                if (!padM || !dot) return;
+
+                const padW = jscolor.images.pad[0];
+                const padH = jscolor.images.pad[1];
+                // slider disabled
+                const face = this.picker.pickerFace || 0;
+                const inset = this.picker.pickerInset || 0;
+                const modeID = (this.picker.pickerMode || 'HSV').toLowerCase() === 'hvs' ? 1 : 0;
+
+                // Compute normalized positions from hsv
+                const hsv = this.picker.hsv || [0, 0, 1];
+                let x = Math.round((hsv[0] / 6) * (padW - 1));
+                let yPad;
+                if (modeID === 0) {
+                    // HSV: pad Y maps to S
+                    yPad = Math.round((1 - hsv[1]) * (padH - 1));
+                } else {
+                    // HVS: pad Y maps to V
+                    yPad = Math.round((1 - hsv[2]) * (padH - 1));
+                }
+                // Slider Y: prefer reading jscolor's own backgroundPosition for exact alignment
+
+                // Position the dot within pad area (offset by face+inset)
+                dot.style.left = (face + inset + x) + 'px';
+                dot.style.top = (face + inset + yPad) + 'px';
+
+                // No slider marker in simplified UI
+            } catch (_) {
+                // ignore positioning errors
+            } finally {
+                this._markerRaf = null;
+            }
+        });
     }
 
     toggleEyedropper() {
@@ -199,15 +288,13 @@ class FloatingColorPicker {
     }
 
     sampleColorAtEvent(event) {
-        // Deactivate eyedropper mode first
-        this.deactivateEyedropper();
-
         // Get the color from the clicked position
         const color = this.getColorAtPosition(event.clientX, event.clientY);
 
         if (color) {
             this.currentColor = color;
             this.openPickerWithSampledColor(color);
+            // Keep eyedropper active (toggle-off via FAB/ESC)
         }
     }
 
@@ -493,12 +580,13 @@ class FloatingColorPicker {
         const panel = container.querySelector('.color-picker-panel');
 
         // Add closing animation (sync to animationend for cross-platform consistency)
+        if (this._markerRaf) {
+            cancelAnimationFrame(this._markerRaf);
+            this._markerRaf = null;
+        }
         try {
             if (this.picker && typeof this.picker.hidePicker === 'function') {
                 this.picker.hidePicker();
-            }
-            if (window.jscolor && jscolor.picker && jscolor.picker.boxB) {
-                jscolor.picker.boxB.style.display = 'none';
             }
         } catch (_) {}
 

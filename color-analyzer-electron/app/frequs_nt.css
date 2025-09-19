@@ -305,6 +305,7 @@ body.eyedropper-active * {
     font-size: 13px;
     font-family: monospace;
 }
+.color-input:focus { outline: none; }
 
 .color-preview {
     width: 48px;
