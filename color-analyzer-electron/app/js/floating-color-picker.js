@@ -33,14 +33,8 @@ class FloatingColorPicker {
         fab.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            // Toggle behavior: if panel open, close it; otherwise toggle eyedropper
-            const container = document.getElementById('floatingColorPicker');
-            const isOpen = container && container.style.display === 'flex';
-            if (isOpen) {
-                this.closePicker();
-            } else {
-                this.toggleEyedropper();
-            }
+            // Original behavior: always toggle eyedropper (panel control unchanged)
+            this.toggleEyedropper();
         });
         closeBtn.addEventListener('click', () => this.closePicker());
 
@@ -288,13 +282,14 @@ class FloatingColorPicker {
     }
 
     sampleColorAtEvent(event) {
+        // Deactivate eyedropper after one sample (original behavior)
+        this.deactivateEyedropper();
         // Get the color from the clicked position
         const color = this.getColorAtPosition(event.clientX, event.clientY);
 
         if (color) {
             this.currentColor = color;
             this.openPickerWithSampledColor(color);
-            // Keep eyedropper active (toggle-off via FAB/ESC)
         }
     }
 
