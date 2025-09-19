@@ -44,6 +44,7 @@ jobs:
       run: npm run build:${{ matrix.platform }}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ELECTRON_BUILDER_SKIP_PUBLISH: true
 
     - name: Upload Linux artifacts
       if: matrix.platform == 'linux'

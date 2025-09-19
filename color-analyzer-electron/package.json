@@ -28,7 +28,6 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "publish": "never",
     "appId": "com.univ-tlse2.color-analyzer",
     "productName": "Color Analyzer",
     "directories": {
