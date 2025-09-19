@@ -1264,7 +1264,7 @@ var svgSVG = function() {
 document.getElementById('files').addEventListener('change', handleFileSelect, false);
 img.addEventListener('load', imgLoaded, false);
 img.addEventListener('click', thumbClick, false);
-drawCanvas.addEventListener('mousedown', canvasClick, false);
+drawCanvas.addEventListener('click', canvasClick, false);
 //svgPNG.addEventListener('click', svgImg, false);
 
 imgSelector.addEventListener('change', function () {
