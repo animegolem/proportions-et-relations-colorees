@@ -31,13 +31,16 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '18.20.8'
         cache: 'npm'
+        cache-dependency-path: color-analyzer-electron/package-lock.json
 
     - name: Install dependencies
+      working-directory: color-analyzer-electron
       run: npm ci
 
     - name: Build application
+      working-directory: color-analyzer-electron
       run: npm run build:${{ matrix.platform }}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,9 +51,9 @@ jobs:
       with:
         name: linux-builds
         path: |
-          dist/*.AppImage
-          dist/*.deb
-          dist/*.rpm
+          color-analyzer-electron/dist/*.AppImage
+          color-analyzer-electron/dist/*.deb
+          color-analyzer-electron/dist/*.rpm
         retention-days: 30
 
     - name: Upload Windows artifacts
@@ -59,8 +62,8 @@ jobs:
       with:
         name: windows-builds
         path: |
-          dist/*.exe
-          dist/*.msi
+          color-analyzer-electron/dist/*.exe
+          color-analyzer-electron/dist/*.msi
         retention-days: 30
 
     - name: Upload macOS artifacts
@@ -69,8 +72,8 @@ jobs:
       with:
         name: macos-builds
         path: |
-          dist/*.dmg
-          dist/*.zip
+          color-analyzer-electron/dist/*.dmg
+          color-analyzer-electron/dist/*.zip
         retention-days: 30
 
   release:
@@ -103,13 +106,16 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '18.20.8'
         cache: 'npm'
+        cache-dependency-path: color-analyzer-electron/package-lock.json
 
     - name: Install dependencies
+      working-directory: color-analyzer-electron
       run: npm ci
 
     - name: Test application startup
+      working-directory: color-analyzer-electron
       run: |
         npm start &
         APP_PID=$!
