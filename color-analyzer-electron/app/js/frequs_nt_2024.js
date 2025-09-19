@@ -40,7 +40,8 @@ var lmax = 255;
 
 if (location.search == "?l=fr") { //Si français
     document.title = "Proportions et relations color&eacute;es d'une image - version RGB linéaire";
-    document.getElementById("langue").href = "frequs_nt_2024.html";
+    // In Electron app, our entry is index.html; switch link accordingly
+    document.getElementById("langue").href = "index.html";
     document.getElementById("langue").innerHTML = "English version";
     document.getElementById("title").innerHTML = "Proportions et relations color&eacute;es d'une image - version RGB linéaire";
     document.getElementById("subtitle").innerHTML = "Exp&eacute;rience d'analyse et de repr&eacute;sentation synth&eacute;tique";
@@ -1215,7 +1216,7 @@ var canvasClick = function (event) {
             var rect = drawCanvas.getBoundingClientRect();
             var coef = Math.max((imgCanvas.width / 400), (imgCanvas.height / 400));
             var xc = Math.ceil((event.pageX - rect.left) * coef);
-            var yc = Math.ceil((event.pageY - window.scrollY - rect.top) * coef);""
+            var yc = Math.ceil((event.pageY - window.scrollY - rect.top) * coef);
             ptClick.push({x: xc, y: yc});
             if (ptClick.length == 2) {
                 updateHist(rType);
