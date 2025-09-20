@@ -1,6 +1,6 @@
 # Proportions et relations colorées — Electron App
 
-A fork of an [online cole analysis tool.](https://www.geotests.net/couleurs/v2/) The primary goals were to ensure the site was usable offline and that I could never lose access to it. Additionally I've added a few quality of life features. 
+A fork of an [online cole analysis tool.](https://www.geotests.net/couleurs/v2/) The primary goals were to ensure the site was usable offline and that I could never lose access to it. Additionally I've added a few quality-of-life features. 
 
 All credit for the base tool goes to Laurent Jégou.
 
