@@ -19,7 +19,7 @@ https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 - macOS: `npm run build:mac`
 - Output: `color-analyzer-electron/dist/`
 
-CI builds are configured in `.github/workflows/build.yml` and run per‑OS with Node 18.20.8. Artifacts are uploaded on each job.
+Builds are also published via the release tag. 
 
 ## Using the App
 - Language toggle: click “Version française” (or `?l=fr`) to switch FR/EN in place.
