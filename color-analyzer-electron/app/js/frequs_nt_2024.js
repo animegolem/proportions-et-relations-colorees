@@ -1301,6 +1301,117 @@ var svgSVG = function() {
     }
 };
 
+// Compose a full analysis PNG (image + 2D circle + palette)
+var exportAnalysisPng = function() {
+    try {
+        // Determine scale based on input image size
+        var scale = 1.0;
+        if (imgCanvas && (imgCanvas.width >= 1920 || imgCanvas.height >= 1080)) {
+            scale = 0.5;
+        }
+
+        // Layout sizes
+        var pad = 20;
+        var leftW = Math.max(1, ~~(imgCanvas.width * scale));
+        var leftH = Math.max(1, ~~(imgCanvas.height * scale));
+
+        // Ensure we have a 2D circle rendered as SVG
+        if (!histCtx || !histCtx.__root) {
+            // (Re)draw current 2D representation
+            drawCC2('CC', bins);
+        }
+        var svgW = histCtx.width || 400;
+        var svgH = histCtx.height || 400;
+        var rightW = ~~(svgW * scale);
+        var rightH = ~~(svgH * scale);
+
+        // Palette column width
+        var paletteW = 240;
+        var outW = pad + leftW + pad + rightW + pad + paletteW + pad;
+        var outH = pad + Math.max(leftH, Math.max(rightH, 20 * 18)) + pad; // leave room for palette
+
+        var out = document.createElement('canvas');
+        out.width = outW;
+        out.height = outH;
+        var ctx = out.getContext('2d');
+
+        // White background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, outW, outH);
+
+        // Draw source image
+        try {
+            ctx.imageSmoothingQuality = 'high';
+        } catch (e) {}
+        ctx.drawImage(imgCanvas, 0, 0, imgCanvas.width, imgCanvas.height, pad, pad, leftW, leftH);
+
+        // Rasterize the SVG circle via canvg into a temp canvas, then draw it
+        var svgHTML = histCtx.__root.outerHTML;
+        var tmp = document.createElement('canvas');
+        tmp.width = svgW; tmp.height = svgH;
+        canvg(tmp, svgHTML);
+        ctx.drawImage(tmp, 0, 0, svgW, svgH, pad + leftW + pad, pad + ~~((Math.max(leftH, rightH) - rightH) / 2), rightW, rightH);
+
+        // Draw palette list using computed bins/colors
+        var paletteX = pad + leftW + pad + rightW + pad;
+        var paletteY = pad;
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = '#000';
+        ctx.textBaseline = 'middle';
+
+        var maxRows = Math.min(bins.length - nbpc, 20);
+        var rowH = 22;
+        for (var i = 0; i < maxRows; i++) {
+            var bi = i + nbpc;
+            if (!bs[bi] || bs[bi].couleur == undefined) { continue; }
+            var ce, cea, label;
+            switch (cs) {
+                case 'YUV':
+                    ce = yuv2rgb(bs[bi].couleur); label = '['+ce.r+':'+ce.g+':'+ce.b+']'; break;
+                case 'HSL':
+                    ce = ahsv2rgb(bs[bi].couleur); label = '['+ce.r+':'+ce.g+':'+ce.b+']'; break;
+                case 'CIELAB':
+                    ce = cielab2rgb(bs[bi].couleur); label = '['+ce.r+':'+ce.g+':'+ce.b+']'; break;
+                case 'CIELUV':
+                    ce = cieluv2rgb(bs[bi].couleur); label = '['+ce.r+':'+ce.g+':'+ce.b+']'; break;
+                case 'LRGB':
+                    ce = bs[bi].couleur; cea = lrgb2srgb(bs[bi].couleur); label = '['+cea.r+':'+cea.g+':'+cea.b+']'; break;
+            }
+            var rr = (cs == 'LRGB') ? cea.r : ce.r;
+            var gg = (cs == 'LRGB') ? cea.g : ce.g;
+            var bb = (cs == 'LRGB') ? cea.b : ce.b;
+            // swatch
+            ctx.fillStyle = 'rgb('+rr+','+gg+','+bb+')';
+            ctx.fillRect(paletteX, paletteY + i*rowH, 48, rowH - 4);
+            // text
+            ctx.fillStyle = '#222';
+            ctx.fillText(label + ' : ' + bs[bi].compte, paletteX + 56, paletteY + i*rowH + (rowH-4)/2);
+        }
+
+        // Save via Electron or fallback
+        var dataURL = out.toDataURL('image/png');
+        try {
+            if (window.electronAPI && window.electronAPI.saveFile && window.electronAPI.saveDataUrl) {
+                window.electronAPI.saveFile('analysis.png', [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
+                    if (res && !res.canceled && res.filePath) {
+                        window.electronAPI.saveDataUrl(res.filePath, dataURL);
+                    } else {
+                        var ds = document.getElementById('svgPNG');
+                        ds.href = dataURL; ds.download = 'analysis.png';
+                    }
+                });
+            } else {
+                var ds = document.getElementById('svgPNG');
+                ds.href = dataURL; ds.download = 'analysis.png';
+            }
+        } catch (e) {
+            var ds = document.getElementById('svgPNG');
+            ds.href = dataURL; ds.download = 'analysis.png';
+        }
+    } catch (e) {
+        console.warn('Export analysis PNG failed', e);
+    }
+};
 document.getElementById('files').addEventListener('change', handleFileSelect, false);
 img.addEventListener('load', imgLoaded, false);
 img.addEventListener('click', thumbClick, false);
