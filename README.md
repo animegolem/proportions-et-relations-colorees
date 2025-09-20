@@ -2,6 +2,8 @@
 
 A fork of an [online cole analysis tool.](https://www.geotests.net/couleurs/v2/) The primary goals were to ensure the site was usable offline and that I could never lose access to it. Additionally I've added a few quality of life features. 
 
+All credit for the base tool goes to Laurent Jégou.
+
 **Notable Changes**
 
 - Moved to a cross-platform/portable electron app
@@ -14,8 +16,6 @@ https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 
 "Analysis" export
 <img width="2388" height="768" alt="test-analysis-3D" src="https://github.com/user-attachments/assets/03a15f85-4242-45d4-9252-526383a9566a" />
-
-All credit for the base tool goes to Laurent Jégou.
 
 ## Using the App
 - Language toggle: click “Version française” (or `?l=fr`) to switch FR/EN in place.
