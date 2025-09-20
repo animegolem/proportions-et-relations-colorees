@@ -4,6 +4,7 @@ Cross‑platform desktop packaging of the scientific color analysis tool (Three.
 
 Personal fork of a beloved tool to ensure I never lose access to it. Also adding a quick inline color picker. 
 
+https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 
 ## Quick Start
 - Requirements: Node.js 18.20.8
