@@ -12,7 +12,7 @@ All credit for the tool goes to [Laurent Jégou](https://www.geotests.net/couleu
 
 https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 
-"analysis" export
+"Analysis" export
 <img width="2388" height="768" alt="test-analysis-3D" src="https://github.com/user-attachments/assets/03a15f85-4242-45d4-9252-526383a9566a" />
 
 ## Using the App
@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 - macOS: `npm run build:mac`
 - Output: `color-analyzer-electron/dist/`
 
-Builds are also published via the release tag. 
+Cross-Plaform builds are also published via the release tag. 
 
 ## Licensing (Split)
 - Upstream content (original page, algorithms, text): “Color relations and proportions of an image – linear RGB version” by L. Jégou, Université Toulouse‑2 Jean Jaurès (2024). License: Creative Commons Attribution 3.0 Unported (CC BY 3.0) — http://creativecommons.org/licenses/by/3.0/
