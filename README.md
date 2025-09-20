@@ -1,8 +1,14 @@
 # Proportions et relations colorées — Electron App
 
-All credit for the tool goes to [Laurent Jégou](https://www.geotests.net/couleurs/v2/), this is just a personal fork of a beloved tool into a "shelf-stable" format to ensure I never lose access to it. 
+All credit for the tool goes to [Laurent Jégou](https://www.geotests.net/couleurs/v2/), this is just a personal fork of a beloved tool into a "shelf-stable" format + a few additions to ensure I never lose access to it. 
 
-Also added a quick inline color picker and an improved zoom function. 
+**Notable Changes**
+
+- Moved to a cross platform portable electron app
+- New Tool: Inline Eye Dropper and Color Picker 
+- Option to export a formated "analysis" png combining the color graph + original image.
+- Electon Application supports dragging images anywhere in the window for quick analysis. 
+- Exported filenames are no longer generic and are based on the user provided image. e.g. "mypics-analysis.png"
 
 https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 
