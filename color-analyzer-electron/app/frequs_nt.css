@@ -437,3 +437,26 @@ body.eyedropper-active * {
         opacity: 0;
     }
 }
+
+/* Drag-and-drop overlay */
+.drop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    pointer-events: none;
+}
+.drop-overlay .drop-box {
+    background: rgba(255,255,255,0.95);
+    color: #222;
+    border: 3px dashed #888;
+    border-radius: 16px;
+    padding: 36px 48px;
+    font-size: 28px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.28);
+    min-width: 60%;
+    text-align: center;
+}

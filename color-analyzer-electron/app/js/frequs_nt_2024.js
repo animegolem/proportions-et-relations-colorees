@@ -84,9 +84,15 @@ if (location.search == "?l=fr") { //Si français
     document.getElementById("symbopacity").innerHTML = "Opacit&eacute; :";
     document.getElementById("createPNG").innerHTML = "Cr&eacute;er PNG";
     document.getElementById("createSVG").innerHTML = "Cr&eacute;er SVG";
+    var dropMsgFr = document.getElementById('dropMessage');
+    if (dropMsgFr) dropMsgFr.innerHTML = 'D&eacute;posez partout pour analyser';
     document.getElementById("author").innerHTML = "Auteur : ";
     document.getElementById("libraries").innerHTML = "Bibs. : ";
     document.getElementById("licence").innerHTML = "Licence : ";
+}
+else {
+    var dropMsgEn = document.getElementById('dropMessage');
+    if (dropMsgEn) dropMsgEn.innerHTML = 'Drop anywhere to analyze';
 }
 
 if (!drawCtx.setLineDash) {
@@ -1403,7 +1409,9 @@ var exportAnalysisPng = function() {
 
         // Draw palette list using computed bins/colors
         var paletteX = pad + leftW + pad + circleDia + pad;
-        var paletteY = pad;
+        // Center the palette block vertically like the circle
+        var tallestCol = Math.max(leftH, circleDia);
+        var paletteY = pad + Math.max(0, Math.round((tallestCol - paletteH) / 2));
         ctx.font = fontPx + 'px sans-serif';
         ctx.fillStyle = '#000';
         ctx.textBaseline = 'middle';
@@ -1471,3 +1479,27 @@ imgSelector.addEventListener('change', function () {
 }, false);
 
 imgLoaded();
+
+// Global drag-and-drop: show overlay and load dropped image(s)
+(function setupGlobalDragDrop(){
+    try {
+        var overlay = document.getElementById('dropOverlay');
+        if (!overlay) return;
+
+        var dragDepth = 0;
+        var show = function(){ overlay.style.display = 'flex'; };
+        var hide = function(){ overlay.style.display = 'none'; dragDepth = 0; };
+
+        // Always show overlay on dragenter to avoid platform quirks with dataTransfer.types
+        window.addEventListener('dragenter', function(ev){ ev.preventDefault(); dragDepth++; show(); });
+        window.addEventListener('dragover', function(ev){ ev.preventDefault(); if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy'; });
+        window.addEventListener('dragleave', function(ev){ ev.preventDefault(); dragDepth = Math.max(0, dragDepth-1); if (dragDepth === 0) hide(); });
+        window.addEventListener('drop', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            hide();
+            if (ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files.length) {
+                handleFileSelect({ target: { files: ev.dataTransfer.files } });
+            }
+        });
+    } catch (e) { /* ignore */ }
+})();
