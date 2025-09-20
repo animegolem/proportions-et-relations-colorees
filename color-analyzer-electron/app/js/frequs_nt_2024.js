@@ -1231,15 +1231,54 @@ var svgImg = function() {
             var SVGHTML = histCtx.__root.outerHTML;
             var cI = document.getElementById("canvasImg");
             canvg(cI, SVGHTML)
-            var dataURL = cI.toDataURL("image/png")
+            var dataURL = cI.toDataURL("image/png");
+            // Try Electron save dialog first
+            try {
+                if (window.electronAPI && window.electronAPI.saveFile && window.electronAPI.saveDataUrl) {
+                    window.electronAPI.saveFile('color-analyzer.png', [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
+                        if (res && !res.canceled && res.filePath) {
+                            window.electronAPI.saveDataUrl(res.filePath, dataURL);
+                        } else {
+                            // Fallback to download attribute
+                            var ds = document.getElementById("svgPNG");
+                            ds.href = dataURL;
+                            ds.download = "color-analyzer.png";
+                        }
+                    });
+                } else {
+                    var ds = document.getElementById("svgPNG");
+                    ds.href = dataURL;
+                    ds.download = "color-analyzer.png";
+                }
+            } catch (e) {
+                var ds = document.getElementById("svgPNG");
+                ds.href = dataURL;
+                ds.download = "color-analyzer.png";
+            }
             break;
         case true:
             var dataURL = renderer.domElement.toDataURL("image/png");
-            var p5 = document.getElementById("p5");
-            var cI = document.createElement("img");
-            cI.setAttribute("src", dataURL);
-            cI.setAttribute("alt", "3D Representation");
-            p5.appendChild(cI);
+            try {
+                if (window.electronAPI && window.electronAPI.saveFile && window.electronAPI.saveDataUrl) {
+                    window.electronAPI.saveFile('color-analyzer-3d.png', [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
+                        if (res && !res.canceled && res.filePath) {
+                            window.electronAPI.saveDataUrl(res.filePath, dataURL);
+                        } else {
+                            var ds = document.getElementById("svgPNG");
+                            ds.href = dataURL;
+                            ds.download = "color-analyzer-3d.png";
+                        }
+                    });
+                } else {
+                    var ds = document.getElementById("svgPNG");
+                    ds.href = dataURL;
+                    ds.download = "color-analyzer-3d.png";
+                }
+            } catch (e) {
+                var ds = document.getElementById("svgPNG");
+                ds.href = dataURL;
+                ds.download = "color-analyzer-3d.png";
+            }
             break;
     }
 };

@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFile: () => ipcRenderer.invoke('dialog:openFile'),
   saveFile: (defaultPath, filters) => ipcRenderer.invoke('dialog:saveFile', defaultPath, filters),
   writeClipboardText: (text) => ipcRenderer.invoke('clipboard:writeText', text),
+  saveDataUrl: (filePath, dataUrl) => ipcRenderer.invoke('file:saveDataUrl', filePath, dataUrl),
   platform: process.platform,
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
 });

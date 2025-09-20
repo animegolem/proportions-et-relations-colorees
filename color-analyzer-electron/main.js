@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, dialog, shell, ipcMain, clipboard } = require('electron');
+const fs = require('fs');
 const path = require('path');
 
 let mainWindow;
@@ -158,6 +159,32 @@ app.on('window-all-closed', () => {
 ipcMain.handle('clipboard:writeText', (_event, text) => {
   try {
     clipboard.writeText(String(text ?? ''));
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
+});
+
+ipcMain.handle('dialog:saveFile', async (_event, defaultPath, filters) => {
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      defaultPath: defaultPath || 'color-analyzer.png',
+      filters: filters || [{ name: 'PNG Image', extensions: ['png'] }]
+    });
+    return result; // { canceled, filePath }
+  } catch (e) {
+    return { canceled: true, error: String(e) };
+  }
+});
+
+ipcMain.handle('file:saveDataUrl', async (_event, filePath, dataUrl) => {
+  try {
+    if (!filePath) throw new Error('No file path provided');
+    const m = /^data:(.*?);base64,(.*)$/.exec(String(dataUrl || ''));
+    if (!m) throw new Error('Invalid data URL');
+    const base64 = m[2];
+    const buf = Buffer.from(base64, 'base64');
+    await fs.promises.writeFile(filePath, buf);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: String(e) };
