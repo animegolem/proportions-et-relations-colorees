@@ -2,6 +2,24 @@
  * Created by laurentjegou on 20/12/14.
  */
 var img, imgCanvas, imgCtx, drawCanvas, drawCtx, imre, tyd, nbpc, rType = 'CC', cc3d = false, contour = false; axes = 'hsl', cs = 'YUV', bins = Array();
+var userFilenameBase = 'image';
+
+function setUserFilenameBaseFromPath(p) {
+    try {
+        if (!p) return;
+        // if data URL, keep current base
+        if (String(p).indexOf('data:') === 0) return;
+        var s = String(p).split('?')[0];
+        var parts = s.split('/');
+        var name = parts[parts.length - 1] || 'image';
+        // strip extension
+        var dot = name.lastIndexOf('.');
+        if (dot > 0) name = name.substring(0, dot);
+        // sanitize
+        name = name.replace(/[^A-Za-z0-9._-]+/g, '_');
+        if (name) userFilenameBase = name;
+    } catch (e) {}
+}
 var container, scene, pointLight, camera, renderer, controls, dgui = null;
 var init3D = false, typeClick = 1;
 var rotation = 0;
@@ -154,15 +172,20 @@ var loadImage = function(ev){
 };
 
 var handleFileSelect = function(evt) {
-    var files = evt.target.files; // FileList object
+    var files = evt.target.files; // array or FileList
     // Loop through the FileList and render image files as thumbnails.
     for (var i = 0, f; f = files[i]; i++) {
-        // Only process image files.
-        if (!f.type.match('image*')) {
-            continue;
-        }
+        // Only process image files (accept empty-type when extension matches)
+        var isImage = false;
+        if (f.type && f.type.indexOf('image') === 0) { isImage = true; }
+        else if (f.name && /\.(png|jpe?g|gif|bmp|webp|tiff?)$/i.test(f.name)) { isImage = true; }
+        if (!isImage) continue;
 
         var reader = new FileReader();
+        // Remember filename base from the first valid image
+        if (i === 0 && f && f.name) {
+            setUserFilenameBaseFromPath(f.name);
+        }
 
         // Closure to capture the file information.
         reader.onload = (function(theFile) {
@@ -181,7 +204,7 @@ var handleFileSelect = function(evt) {
 var preparePaletteCSV = function(blob){
     var textFileAsBlob = new Blob([blob], {type:'text/plain'});
     var downloadLink = document.getElementById("svgPaletteLink");
-    downloadLink.download = "palette.csv";
+    downloadLink.download = (userFilenameBase || 'image') + '-palette.csv';
     downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
 };
 
@@ -1238,52 +1261,54 @@ var svgImg = function() {
             var cI = document.getElementById("canvasImg");
             canvg(cI, SVGHTML)
             var dataURL = cI.toDataURL("image/png");
+            var fname = (userFilenameBase || 'image') + '-graph.png';
             // Try Electron save dialog first
             try {
                 if (window.electronAPI && window.electronAPI.saveFile && window.electronAPI.saveDataUrl) {
-                    window.electronAPI.saveFile('color-analyzer.png', [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
+                    window.electronAPI.saveFile(fname, [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
                         if (res && !res.canceled && res.filePath) {
                             window.electronAPI.saveDataUrl(res.filePath, dataURL);
                         } else {
                             // Fallback to download attribute
                             var ds = document.getElementById("svgPNG");
                             ds.href = dataURL;
-                            ds.download = "color-analyzer.png";
+                            ds.download = fname;
                         }
                     });
                 } else {
                     var ds = document.getElementById("svgPNG");
                     ds.href = dataURL;
-                    ds.download = "color-analyzer.png";
+                    ds.download = fname;
                 }
             } catch (e) {
                 var ds = document.getElementById("svgPNG");
                 ds.href = dataURL;
-                ds.download = "color-analyzer.png";
+                ds.download = fname;
             }
             break;
         case true:
             var dataURL = renderer.domElement.toDataURL("image/png");
+            var fname3 = (userFilenameBase || 'image') + '-graph.png';
             try {
                 if (window.electronAPI && window.electronAPI.saveFile && window.electronAPI.saveDataUrl) {
-                    window.electronAPI.saveFile('color-analyzer-3d.png', [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
+                    window.electronAPI.saveFile(fname3, [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
                         if (res && !res.canceled && res.filePath) {
                             window.electronAPI.saveDataUrl(res.filePath, dataURL);
                         } else {
                             var ds = document.getElementById("svgPNG");
                             ds.href = dataURL;
-                            ds.download = "color-analyzer-3d.png";
+                            ds.download = fname3;
                         }
                     });
                 } else {
                     var ds = document.getElementById("svgPNG");
                     ds.href = dataURL;
-                    ds.download = "color-analyzer-3d.png";
+                    ds.download = fname3;
                 }
             } catch (e) {
                 var ds = document.getElementById("svgPNG");
                 ds.href = dataURL;
-                ds.download = "color-analyzer-3d.png";
+                ds.download = fname3;
             }
             break;
     }
@@ -1299,7 +1324,7 @@ var svgSVG = function() {
             //Use the download attribute (or a shim) to provide a link
             var ds = document.getElementById("svgSVG");
             ds.href = imgData;
-            ds.download = "download";
+            ds.download = (userFilenameBase || 'image') + '-graph.svg';
             break;
         case true:
             document.getElementById('svgSVG').hidden = true;
@@ -1446,23 +1471,24 @@ var exportAnalysisPng = function() {
 
         // Save via Electron or fallback
         var dataURL = out.toDataURL('image/png');
+        var anName = (userFilenameBase || 'image') + '-analysis.png';
         try {
             if (window.electronAPI && window.electronAPI.saveFile && window.electronAPI.saveDataUrl) {
-                window.electronAPI.saveFile('analysis.png', [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
+                window.electronAPI.saveFile(anName, [{ name: 'PNG Image', extensions: ['png'] }]).then(function(res){
                     if (res && !res.canceled && res.filePath) {
                         window.electronAPI.saveDataUrl(res.filePath, dataURL);
                     } else {
                         var ds = document.getElementById('svgPNG');
-                        ds.href = dataURL; ds.download = 'analysis.png';
+                        ds.href = dataURL; ds.download = anName;
                     }
                 });
             } else {
                 var ds = document.getElementById('svgPNG');
-                ds.href = dataURL; ds.download = 'analysis.png';
+                ds.href = dataURL; ds.download = anName;
             }
         } catch (e) {
             var ds = document.getElementById('svgPNG');
-            ds.href = dataURL; ds.download = 'analysis.png';
+            ds.href = dataURL; ds.download = anName;
         }
     } catch (e) {
         console.warn('Export analysis PNG failed', e);
@@ -1475,7 +1501,10 @@ drawCanvas.addEventListener('click', canvasClick, false);
 //svgPNG.addEventListener('click', svgImg, false);
 
 imgSelector.addEventListener('change', function () {
-    img.src = this.value;
+    var v = this.value || '';
+    if (v.indexOf('./') === 0) v = v.substring(2);
+    setUserFilenameBaseFromPath(v);
+    img.src = v;
 }, false);
 
 imgLoaded();
@@ -1484,22 +1513,86 @@ imgLoaded();
 (function setupGlobalDragDrop(){
     try {
         var overlay = document.getElementById('dropOverlay');
+        var hiddenInput = document.getElementById('hiddenDropInput');
         if (!overlay) return;
 
         var dragDepth = 0;
-        var show = function(){ overlay.style.display = 'flex'; };
-        var hide = function(){ overlay.style.display = 'none'; dragDepth = 0; };
+        var dropping = false;
+        var show = function(){ overlay.style.display = 'flex'; if (hiddenInput) hiddenInput.style.display = 'block'; };
+        var hide = function(){ overlay.style.display = 'none'; if (hiddenInput) hiddenInput.style.display = 'none'; dragDepth = 0; };
+
+        var isOverFileInput = function(ev){
+            var path = (ev.composedPath && ev.composedPath()) || [];
+            path.push(ev.target);
+            for (var i = 0; i < path.length; i++) {
+                var el = path[i];
+                if (!el || !el.tagName) continue;
+                var tag = (el.tagName || '').toLowerCase();
+                if (tag === 'input' && el.type === 'file') return true;
+                if (el.id === 'files') return true; // our file input has id="files"
+            }
+            return false;
+        };
 
         // Always show overlay on dragenter to avoid platform quirks with dataTransfer.types
-        window.addEventListener('dragenter', function(ev){ ev.preventDefault(); dragDepth++; show(); });
-        window.addEventListener('dragover', function(ev){ ev.preventDefault(); if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy'; });
-        window.addEventListener('dragleave', function(ev){ ev.preventDefault(); dragDepth = Math.max(0, dragDepth-1); if (dragDepth === 0) hide(); });
+        window.addEventListener('dragenter', function(ev){
+            if (isOverFileInput(ev)) { hide(); return; }
+            ev.preventDefault(); dragDepth++; show();
+        }, { capture: true, passive: false });
+        window.addEventListener('dragover', function(ev){
+            if (isOverFileInput(ev)) { hide(); return; }
+            ev.preventDefault(); if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
+        }, { capture: true, passive: false });
+        window.addEventListener('dragleave', function(ev){ ev.preventDefault(); dragDepth = Math.max(0, dragDepth-1); if (dragDepth === 0 && !dropping) hide(); }, { capture: true, passive: false });
+
+        // Collect files synchronously from dataTransfer (items preferred)
+        var collectDropFiles = function(dt){
+            var list = [];
+            try {
+                // Prefer dt.files for stability on Linux/Wayland; fall back to items
+                if (dt.files && dt.files.length) {
+                    for (var j = 0; j < dt.files.length; j++) list.push(dt.files[j]);
+                } else if (dt.items && dt.items.length) {
+                    for (var i = 0; i < dt.items.length; i++) {
+                        var it = dt.items[i];
+                        if (it.kind === 'file') {
+                            var f = it.getAsFile();
+                            if (f) list.push(f);
+                        }
+                    }
+                }
+            } catch (e) {}
+            return list;
+        };
+
         window.addEventListener('drop', function(ev){
+            if (isOverFileInput(ev)) { hide(); return; } // let native input handle drop 100%
             ev.preventDefault(); ev.stopPropagation();
+            if (dropping) return; // throttle multiple drop events
+            dropping = true;
+            var list = collectDropFiles(ev.dataTransfer || {});
             hide();
-            if (ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files.length) {
-                handleFileSelect({ target: { files: ev.dataTransfer.files } });
+            if (list && list.length) {
+                handleFileSelect({ target: { files: list } });
             }
-        });
+            // allow dragleave/hide to run again shortly after
+            setTimeout(function(){ dropping = false; }, 200);
+        }, { capture: true, passive: false });
+        window.addEventListener('dragend', function(){ hide(); }, { capture: true });
+
+        // When the hidden input receives files (via native drop), reuse the existing handler
+        if (hiddenInput) {
+            hiddenInput.addEventListener('change', function(ev){
+                try {
+                    if (ev.target && ev.target.files && ev.target.files.length) {
+                        handleFileSelect(ev);
+                    }
+                } finally {
+                    // Reset the input so subsequent drops fire change again reliably
+                    ev.target.value = '';
+                    hide();
+                }
+            });
+        }
     } catch (e) { /* ignore */ }
 })();

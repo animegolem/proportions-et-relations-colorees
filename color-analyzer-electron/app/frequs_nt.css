@@ -460,3 +460,12 @@ body.eyedropper-active * {
     min-width: 60%;
     text-align: center;
 }
+
+/* Hidden file input spans the window during drag to capture native drops reliably */
+#hiddenDropInput {
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    z-index: 2002; /* above overlay */
+    pointer-events: auto;
+}
