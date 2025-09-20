@@ -60,14 +60,27 @@ jobs:
           color-analyzer-electron/dist/*.rpm
         retention-days: 30
 
-    - name: Upload Windows artifacts
+    - name: Upload Windows installer (NSIS)
       if: matrix.platform == 'win'
       uses: actions/upload-artifact@v4
       with:
-        name: windows-builds
+        name: windows-installer
         path: |
-          color-analyzer-electron/dist/*.exe
+          color-analyzer-electron/dist/*Setup*.exe
           color-analyzer-electron/dist/*.msi
+        if-no-files-found: ignore
+        retention-days: 30
+
+    - name: Upload Windows portable EXE
+      if: matrix.platform == 'win'
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-portable
+        path: |
+          color-analyzer-electron/dist/*Portable*.exe
+          color-analyzer-electron/dist/*portable*.exe
+          color-analyzer-electron/dist/*-portable*.exe
+        if-no-files-found: ignore
         retention-days: 30
 
     - name: Upload macOS artifacts

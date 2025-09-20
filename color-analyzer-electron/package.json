@@ -58,6 +58,10 @@
       ],
       "icon": "assets/icon.ico"
     },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}-${arch}.${ext}",
+      "requestExecutionLevel": "user"
+    },
     "mac": {
       "target": [
         {
@@ -92,6 +96,7 @@
       "maintainer": "laurent.jegou@univ-tlse2.fr"
     },
     "nsis": {
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
