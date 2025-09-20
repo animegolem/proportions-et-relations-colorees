@@ -1,6 +1,6 @@
 # Proportions et relations colorées — Electron App
 
-All credit for the tool goes to [Laurent Jégou](https://www.geotests.net/couleurs/v2/), this is just a personal fork of a beloved tool into a "shelf-stable" format + a few additions to ensure I never lose access to it. 
+A fork of an [online cole analysis tool.](https://www.geotests.net/couleurs/v2/) The primary goals were to ensure the site was usable offline and that I could never lose access to it. Additionally I've added a few quality of life features. 
 
 **Notable Changes**
 
@@ -14,6 +14,8 @@ https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 
 "Analysis" export
 <img width="2388" height="768" alt="test-analysis-3D" src="https://github.com/user-attachments/assets/03a15f85-4242-45d4-9252-526383a9566a" />
+
+All credit for the base tool goes to Laurent Jégou.
 
 ## Using the App
 - Language toggle: click “Version française” (or `?l=fr`) to switch FR/EN in place.
