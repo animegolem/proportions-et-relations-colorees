@@ -1304,31 +1304,61 @@ var svgSVG = function() {
 // Compose a full analysis PNG (image + 2D circle + palette)
 var exportAnalysisPng = function() {
     try {
-        // Determine scale based on input image size
-        var scale = 1.0;
+        // Determine base image scale so the export fits reasonably on typical screens
+        var baseScale = 1.0;
         if (imgCanvas && (imgCanvas.width >= 1920 || imgCanvas.height >= 1080)) {
-            scale = 0.5;
+            baseScale = 0.5;
+        } else if (imgCanvas && (imgCanvas.width >= 1280 || imgCanvas.height >= 720)) {
+            baseScale = 0.75;
         }
 
-        // Layout sizes
-        var pad = 20;
-        var leftW = Math.max(1, ~~(imgCanvas.width * scale));
-        var leftH = Math.max(1, ~~(imgCanvas.height * scale));
+        var pad = 24;
+        var leftW = Math.max(1, Math.round(imgCanvas.width * baseScale));
+        var leftH = Math.max(1, Math.round(imgCanvas.height * baseScale));
 
-        // Ensure we have a 2D circle rendered as SVG
+        // Circle/cylinder target size tracks the scaled image height (visual parity)
+        // Target circle size: follow the scaled image height (~95%) so layout looks native
+        var circleDia = Math.max(320, Math.round(leftH * 0.95));
+        var circleBase = (histCtx && histCtx.width) ? histCtx.width : 400; // original SVG reference
+        var circleScale = circleDia / circleBase;
+
+        // Ensure we have the latest 2D state if needed (reflects current options)
         if (!histCtx || !histCtx.__root) {
-            // (Re)draw current 2D representation
             drawCC2('CC', bins);
         }
-        var svgW = histCtx.width || 400;
-        var svgH = histCtx.height || 400;
-        var rightW = ~~(svgW * scale);
-        var rightH = ~~(svgH * scale);
+        var svgW = histCtx.width || circleBase;
+        var svgH = histCtx.height || circleBase;
 
-        // Palette column width
-        var paletteW = 240;
-        var outW = pad + leftW + pad + rightW + pad + paletteW + pad;
-        var outH = pad + Math.max(leftH, Math.max(rightH, 20 * 18)) + pad; // leave room for palette
+        // Palette metrics scale with circle size (keep legible)
+        var rowH = Math.max(18, Math.round(circleDia * 0.06));
+        var fontPx = Math.max(12, Math.round(rowH * 0.6));
+        var swatchW = Math.max(44, Math.round(rowH * 2.2));
+        // Determine how many rows fit beside the image (clamp so palette height <= left image height)
+        var maxFitRows = Math.max(1, Math.floor((leftH - 2 * pad) / rowH));
+        var estRows = Math.min(bins.length - nbpc, Math.min(20, maxFitRows));
+        var tmpCanvas = document.createElement('canvas');
+        var tmpCtx = tmpCanvas.getContext('2d');
+        tmpCtx.font = fontPx + 'px sans-serif';
+        var maxLabelW = 0;
+        for (var i = 0; i < estRows; i++) {
+            var bi = i + nbpc; if (!bs[bi] || bs[bi].couleur == undefined) continue;
+            var ce, cea;
+            switch (cs) {
+                case 'YUV': ce = yuv2rgb(bs[bi].couleur); break;
+                case 'HSL': ce = ahsv2rgb(bs[bi].couleur); break;
+                case 'CIELAB': ce = cielab2rgb(bs[bi].couleur); break;
+                case 'CIELUV': ce = cieluv2rgb(bs[bi].couleur); break;
+                case 'LRGB': cea = lrgb2srgb(bs[bi].couleur); ce = cea; break;
+            }
+            var label = '['+ce.r+':'+ce.g+':'+ce.b+'] : ' + bs[bi].compte;
+            maxLabelW = Math.max(maxLabelW, tmpCtx.measureText(label).width);
+        }
+        var paletteW = Math.ceil(swatchW + 8 + maxLabelW + 8);
+
+        // Compute output canvas extents
+        var outW = pad + leftW + pad + circleDia + pad + paletteW + pad;
+        var paletteH = estRows * rowH;
+        var outH = pad + Math.max(leftH, Math.max(circleDia, paletteH)) + pad;
 
         var out = document.createElement('canvas');
         out.width = outW;
@@ -1345,22 +1375,40 @@ var exportAnalysisPng = function() {
         } catch (e) {}
         ctx.drawImage(imgCanvas, 0, 0, imgCanvas.width, imgCanvas.height, pad, pad, leftW, leftH);
 
-        // Rasterize the SVG circle via canvg into a temp canvas, then draw it
-        var svgHTML = histCtx.__root.outerHTML;
-        var tmp = document.createElement('canvas');
-        tmp.width = svgW; tmp.height = svgH;
-        canvg(tmp, svgHTML);
-        ctx.drawImage(tmp, 0, 0, svgW, svgH, pad + leftW + pad, pad + ~~((Math.max(leftH, rightH) - rightH) / 2), rightW, rightH);
+        // Draw right analysis view: reflect current selection (2D circle or 3D cylinder)
+        var rightX = pad + leftW + pad;
+        var rightY = pad + Math.max(0, Math.round((Math.max(leftH, circleDia) - circleDia) / 2));
+
+        if (cc3d) {
+            // 3D: draw current renderer canvas scaled to target diameter (center crop to square if needed)
+            var src = renderer && renderer.domElement ? renderer.domElement : null;
+            if (src) {
+                var s = Math.min(src.width, src.height);
+                var sx = Math.max(0, Math.floor((src.width - s)/2));
+                var sy = Math.max(0, Math.floor((src.height - s)/2));
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(src, sx, sy, s, s, rightX, rightY, circleDia, circleDia);
+            }
+        } else {
+            // 2D: render at high resolution then downsample to the target to avoid blur or stroke clipping
+            var svgHTML = histCtx.__root.outerHTML;
+            var renderSize = Math.max(circleDia * 2, circleDia + 8); // 2x supersampling
+            var tmp = document.createElement('canvas');
+            tmp.width = renderSize; tmp.height = renderSize;
+            canvg(tmp, svgHTML, { ignoreDimensions: true, scaleWidth: renderSize, scaleHeight: renderSize });
+            var prev = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(tmp, 0, 0, renderSize, renderSize, rightX, rightY, circleDia, circleDia);
+            ctx.imageSmoothingEnabled = prev;
+        }
 
         // Draw palette list using computed bins/colors
-        var paletteX = pad + leftW + pad + rightW + pad;
+        var paletteX = pad + leftW + pad + circleDia + pad;
         var paletteY = pad;
-        ctx.font = '14px sans-serif';
+        ctx.font = fontPx + 'px sans-serif';
         ctx.fillStyle = '#000';
         ctx.textBaseline = 'middle';
 
-        var maxRows = Math.min(bins.length - nbpc, 20);
-        var rowH = 22;
+        var maxRows = estRows;
         for (var i = 0; i < maxRows; i++) {
             var bi = i + nbpc;
             if (!bs[bi] || bs[bi].couleur == undefined) { continue; }
@@ -1382,10 +1430,10 @@ var exportAnalysisPng = function() {
             var bb = (cs == 'LRGB') ? cea.b : ce.b;
             // swatch
             ctx.fillStyle = 'rgb('+rr+','+gg+','+bb+')';
-            ctx.fillRect(paletteX, paletteY + i*rowH, 48, rowH - 4);
+            ctx.fillRect(paletteX, paletteY + i*rowH, swatchW, rowH - 4);
             // text
             ctx.fillStyle = '#222';
-            ctx.fillText(label + ' : ' + bs[bi].compte, paletteX + 56, paletteY + i*rowH + (rowH-4)/2);
+            ctx.fillText(label + ' : ' + bs[bi].compte, paletteX + swatchW + 8, paletteY + i*rowH + (rowH-4)/2);
         }
 
         // Save via Electron or fallback
