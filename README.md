@@ -19,7 +19,8 @@ https://github.com/user-attachments/assets/0af8d1e2-4356-40be-b362-73ab5ae319d3
 - Language toggle: click “Version française” (or `?l=fr`) to switch FR/EN in place.
 - Eyedropper: use the floating dropper button. Click on the image, 2D circle, or 3D view to sample, then adjust in the panel. Copy values via the Copy buttons.
 - Image zoom: click the image to toggle full/thumbnail.
-- Export: PNG/SVG under section 5.
+- Drag and Drop: Drag images anywhere in the application to load. 
+- Export: PNG/SVG/Analysis under section 5.
 
 ## Quick Start
 - Requirements: Node.js 18.20.8
