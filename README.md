@@ -4,7 +4,7 @@ All credit for the tool goes to [Laurent Jégou](https://www.geotests.net/couleu
 
 **Notable Changes**
 
-- Moved to a cross platform portable electron app
+- Moved to a cross-platform/portable electron app
 - New Tool: Inline Eye Dropper and Color Picker 
 - Option to export a formated "analysis" png combining the color graph + original image.
 - Electon Application supports dragging images anywhere in the window for quick analysis. 
